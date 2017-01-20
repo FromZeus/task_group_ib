@@ -1,0 +1,26 @@
+---
+- hosts: local
+  vars:
+    mem_tags: "{{
+        {1000: '1.0.0',
+         4000: '2.0.0',
+         3898: '2.1.0'}
+      }}"
+  tasks:
+    - name: Get info
+      host_ib:
+        installed_memory: True
+        promisc_count: True
+        vpn_adapters: True
+      register: info
+    - name: Get tag
+      set_fact:
+        repo_tag: "{{ mem_tags[info.meta.installed_memory] }}"
+    - name: Pull configuration
+      git:
+        repo: https://github.com/FromZeus/ib_task_resources.git
+        dest: /tmp/ib_configuration
+        version: "{{ repo_tag }}"
+    - name: Configure
+      shell: cp -r /tmp/ib_configuration/etc/ib_conf /etc/
+    - debug: var=repo_tag
